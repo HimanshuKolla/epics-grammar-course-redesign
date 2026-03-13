@@ -13,3 +13,5 @@ Clone the repo to your system. Open the folder in VS code. Install live server t
 2. Focus mode
 3. Home Page
 4. Leaderboard
+
+We really need a good name for the website.
