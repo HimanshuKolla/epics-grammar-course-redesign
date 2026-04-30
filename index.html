@@ -87,12 +87,12 @@
           <div class="module-thumb">1</div>
           <div class="module-info">
             <div class="module-name-row">
-              <span class="module-name">Grammar Basics</span>
+              <span class="module-name">Technical Writing</span>
               <span class="difficulty-badge badge-easy">Easy</span>
             </div>
             <div class="module-progress-text">10/12 lessons completed</div>
             <div class="progress-bar"><div class="progress-fill green" style="width:83%"></div></div>
-            <button class="module-btn" onclick="startGame('practice')">Continue</button>
+            <button class="module-btn" onclick="startMatchGame()">Continue</button>
           </div>
         </div>
 
@@ -439,6 +439,64 @@
 
     </div>
   </main>
+</div>
+
+<!-- ══════════════════ MATCHING CARD GAME ══════════════════ -->
+<div id="matchgame" class="page">
+
+  <div class="game-header">
+    <button class="back-btn" onclick="showPage('dashboard')">← Back</button>
+    <div class="game-title">🃏 Term Match</div>
+    <div class="header-actions">
+      <button class="header-btn" onclick="showPage('leaderboard')">👑 Leaderboard</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div class="mg-hud">
+    <div class="mg-hud-tile">
+      <div class="mg-hud-label">Matches</div>
+      <div class="mg-hud-value" id="mg-matches">0 / 8</div>
+    </div>
+    <div class="mg-hud-tile">
+      <div class="mg-hud-label">Moves</div>
+      <div class="mg-hud-value" id="mg-moves">0</div>
+    </div>
+    <div class="mg-hud-tile">
+      <div class="mg-hud-label">Score</div>
+      <div class="mg-hud-value" id="mg-score">0</div>
+    </div>
+    <div class="mg-hud-tile">
+      <div class="mg-hud-label">Time</div>
+      <div class="mg-hud-value" id="mg-timer">0:00</div>
+    </div>
+    <div class="mg-hud-tile mg-streak-tile">
+      <div class="mg-hud-label">Streak</div>
+      <div class="mg-hud-value" id="mg-streak">0 🔥</div>
+    </div>
+  </div>
+
+  <!-- Round info -->
+  <div class="mg-round-info">
+    <div class="mg-round-title" id="mg-round-title">Round 1 — Core Concepts</div>
+    <div class="mg-round-desc">Match each technical writing term to its correct definition</div>
+  </div>
+
+  <!-- Card Grid -->
+  <div class="mg-board" id="mg-board">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <!-- Round transition overlay -->
+  <div class="mg-round-overlay" id="mg-round-overlay">
+    <div class="mg-round-overlay-card">
+      <div class="mg-round-overlay-icon" id="mg-overlay-icon">🎯</div>
+      <div class="mg-round-overlay-title" id="mg-overlay-title">Round Complete!</div>
+      <div class="mg-round-overlay-stats" id="mg-overlay-stats"></div>
+      <button class="mg-round-overlay-btn" id="mg-overlay-btn">Next Round →</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- ══════════════════ RESULTS ══════════════════ -->

@@ -1363,9 +1363,358 @@ body {
 }
 
 /* ══════════════════════════════════════
+   MATCHING CARD GAME
+══════════════════════════════════════ */
+#matchgame {
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 40px;
+  overflow-y: auto;
+}
+
+.mg-hud {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 960px;
+  margin: 16px auto 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mg-hud-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+  text-align: center;
+  flex: 1;
+  min-width: 100px;
+}
+
+.mg-hud-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.mg-hud-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.mg-hud-tile:nth-child(1) .mg-hud-value { color: var(--green); }
+.mg-hud-tile:nth-child(2) .mg-hud-value { color: var(--blue); }
+.mg-hud-tile:nth-child(3) .mg-hud-value { color: var(--yellow); }
+.mg-hud-tile:nth-child(4) .mg-hud-value { color: var(--accent); }
+.mg-streak-tile .mg-hud-value { color: var(--orange); }
+
+.mg-round-info {
+  text-align: center;
+  margin: 20px auto 16px;
+  max-width: 960px;
+}
+
+.mg-round-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.mg-round-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Card Board */
+.mg-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* Individual Card */
+.mg-card {
+  perspective: 800px;
+  height: 160px;
+  cursor: pointer;
+  border-radius: var(--radius);
+  position: relative;
+}
+
+.mg-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius);
+}
+
+.mg-card.flipped .mg-card-inner {
+  transform: rotateY(180deg);
+}
+
+.mg-card-front,
+.mg-card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Card Back (face-down, visible by default) */
+.mg-card-back {
+  background: linear-gradient(145deg, var(--surface2) 0%, var(--surface3) 100%);
+  border: 2px solid var(--border);
+  z-index: 2;
+}
+
+.mg-card-back::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px dashed rgba(124,92,252,0.2);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.mg-card-back-icon {
+  font-size: 32px;
+  opacity: 0.3;
+  margin-bottom: 4px;
+}
+
+.mg-card-back-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+/* Card Front (face-up, hidden by default) */
+.mg-card-front {
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  transform: rotateY(180deg);
+}
+
+.mg-card-front.card-term {
+  border-color: var(--accent);
+  background: linear-gradient(145deg, rgba(124,92,252,0.08), var(--surface));
+}
+
+.mg-card-front.card-def {
+  border-color: var(--green);
+  background: linear-gradient(145deg, rgba(62,255,160,0.06), var(--surface));
+}
+
+.mg-card-type-badge {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.card-term .mg-card-type-badge {
+  background: rgba(124,92,252,0.2);
+  color: var(--accent);
+}
+
+.card-def .mg-card-type-badge {
+  background: rgba(62,255,160,0.15);
+  color: var(--green);
+}
+
+.mg-card-content {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.card-term .mg-card-content {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Card States */
+.mg-card.matched .mg-card-inner {
+  transform: rotateY(180deg);
+}
+
+.mg-card.matched .mg-card-front {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 20px rgba(62,255,160,0.15);
+}
+
+.mg-card.matched::after {
+  content: '✓';
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 16px;
+  color: var(--green);
+  z-index: 10;
+  font-weight: 700;
+}
+
+/* Wrong shake — uses margin so it doesn't break perspective/3D */
+.mg-card.wrong-shake {
+  animation: mgShake 0.5s ease-in-out;
+}
+
+@keyframes mgShake {
+  0%, 100% { margin-left: 0; }
+  15% { margin-left: -6px; }
+  30% { margin-left: 5px; }
+  45% { margin-left: -4px; }
+  60% { margin-left: 3px; }
+  75% { margin-left: -2px; }
+}
+
+.mg-card.flipped .mg-card-front {
+  box-shadow: 0 4px 20px rgba(124,92,252,0.2);
+}
+
+.mg-card.locked {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Entrance animation — on the card (no transform, just opacity/scale via inner) */
+.mg-card {
+  animation: mgCardIn 0.4s ease forwards;
+}
+
+@keyframes mgCardIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Match sparkle */
+.mg-card.match-flash .mg-card-front {
+  animation: mgPulseGreen 0.6s ease;
+}
+
+@keyframes mgPulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(62,255,160,0.5); }
+  50% { box-shadow: 0 0 30px 8px rgba(62,255,160,0.25); }
+  100% { box-shadow: 0 0 20px rgba(62,255,160,0.15); }
+}
+
+/* Round overlay */
+.mg-round-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,15,26,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+
+.mg-round-overlay.show {
+  display: flex;
+}
+
+.mg-round-overlay-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 48px;
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  animation: mgOverlayIn 0.4s ease;
+}
+
+@keyframes mgOverlayIn {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.mg-round-overlay-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.mg-round-overlay-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.mg-round-overlay-stats {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.mg-round-overlay-stats span {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.mg-round-overlay-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: #fff;
+  padding: 14px 36px;
+  border-radius: var(--radius-sm);
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mg-round-overlay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124,92,252,0.4);
+}
+
+/* ══════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════ */
 @media (max-width: 900px) {
   .modules-grid { grid-template-columns: repeat(3, 1fr); }
   .stats-row    { grid-template-columns: repeat(2, 1fr); }
+  .mg-board { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .mg-card  { height: 140px; }
+}
+
+@media (max-width: 600px) {
+  .mg-board { grid-template-columns: repeat(2, 1fr); }
+  .mg-card  { height: 130px; }
 }

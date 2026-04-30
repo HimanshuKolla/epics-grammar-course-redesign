@@ -624,6 +624,269 @@ function showToast(msg) {
 }
 
 // ══════════════════════════════════════
+// ══ MATCHING CARD GAME ═══════════════
+// ══════════════════════════════════════
+
+const MG_ROUNDS = [
+  {
+    roundName: "Round 1 — Core Concepts",
+    pairs: [
+      { term: "Active Voice", def: "The subject performs the action: 'The team completed the report.'" },
+      { term: "Passive Voice", def: "The subject receives the action: 'The report was completed by the team.'" },
+      { term: "Conciseness", def: "Using the fewest words needed to convey meaning clearly and directly." },
+      { term: "Jargon", def: "Specialized terminology understood only within a specific field or profession." },
+      { term: "Audience Analysis", def: "Identifying who will read the document and tailoring language accordingly." },
+      { term: "Readability", def: "How easily a reader can understand written text based on structure and word choice." },
+      { term: "Plain Language", def: "Writing that the intended audience can understand the first time they read it." },
+      { term: "Nominalization", def: "Turning a verb into a noun, often weakening the sentence (e.g., 'make a decision')." }
+    ]
+  },
+  {
+    roundName: "Round 2 — Document Structure",
+    pairs: [
+      { term: "Executive Summary", def: "A concise overview of a long document, placed at the beginning for quick understanding." },
+      { term: "Topic Sentence", def: "The opening sentence of a paragraph that states the main idea." },
+      { term: "Transition Words", def: "Words like 'however,' 'therefore,' and 'meanwhile' that connect ideas between sentences." },
+      { term: "Parallel Structure", def: "Using the same grammatical form for items in a list or series." },
+      { term: "White Space", def: "Empty areas on a page that improve readability and reduce visual clutter." },
+      { term: "Headings & Subheadings", def: "Labels that organize content into scannable sections for the reader." },
+      { term: "Scope Statement", def: "A declaration that defines what a document will and will not cover." },
+      { term: "Call to Action", def: "A directive that tells the reader exactly what step to take next." }
+    ]
+  },
+  {
+    roundName: "Round 3 — Editing & Precision",
+    pairs: [
+      { term: "Dangling Modifier", def: "A descriptive phrase that doesn't clearly refer to the correct noun in the sentence." },
+      { term: "Ambiguous Pronoun", def: "A pronoun (he, it, they) whose referent is unclear to the reader." },
+      { term: "Redundancy", def: "Using unnecessary words that repeat the same meaning (e.g., 'end result')." },
+      { term: "Subject-Verb Agreement", def: "Ensuring the verb form matches whether the subject is singular or plural." },
+      { term: "Tone", def: "The writer's attitude toward the subject, conveyed through word choice and style." },
+      { term: "Revision", def: "Rewriting to improve organization, clarity, flow, and strength of argument." },
+      { term: "Proofreading", def: "The final check focused on catching typos, grammar, and formatting errors." },
+      { term: "Style Guide", def: "A set of standards (APA, Chicago, etc.) for formatting, citations, and language use." }
+    ]
+  }
+];
+
+let mgRoundIndex  = 0;
+let mgScore       = 0;
+let mgMoves       = 0;
+let mgMatches     = 0;
+let mgStreak      = 0;
+let mgBestStreak  = 0;
+let mgFlippedCards = [];
+let mgLocked      = false;
+let mgTimerInterval = null;
+let mgSeconds     = 0;
+let mgTotalPairs  = 0;
+let mgCards       = [];
+
+function startMatchGame() {
+  mgRoundIndex = 0;
+  mgScore      = 0;
+  mgMoves      = 0;
+  mgMatches    = 0;
+  mgStreak     = 0;
+  mgBestStreak = 0;
+  mgSeconds    = 0;
+  showPage('matchgame');
+  mgLoadRound();
+}
+
+function mgLoadRound() {
+  clearInterval(mgTimerInterval);
+  mgFlippedCards = [];
+  mgLocked       = false;
+  mgMatches      = 0;
+  mgMoves        = 0;
+  mgSeconds      = 0;
+
+  const round = MG_ROUNDS[mgRoundIndex];
+  mgTotalPairs   = round.pairs.length;
+
+  document.getElementById('mg-round-title').textContent = round.roundName;
+  document.getElementById('mg-matches').textContent     = `0 / ${mgTotalPairs}`;
+  document.getElementById('mg-moves').textContent       = '0';
+  document.getElementById('mg-score').textContent       = mgScore.toLocaleString();
+  document.getElementById('mg-timer').textContent       = '0:00';
+  document.getElementById('mg-streak').textContent      = '0 🔥';
+
+  // Build card data: one card per term, one per definition
+  mgCards = [];
+  round.pairs.forEach((pair, i) => {
+    mgCards.push({ id: i, type: 'term', text: pair.term, pairId: i });
+    mgCards.push({ id: i, type: 'def',  text: pair.def,  pairId: i });
+  });
+
+  // Shuffle
+  mgCards = mgShuffle(mgCards);
+
+  // Render
+  const board = document.getElementById('mg-board');
+  board.innerHTML = '';
+  mgCards.forEach((card, idx) => {
+    const el = document.createElement('div');
+    el.className = 'mg-card';
+    el.dataset.idx    = idx;
+    el.dataset.pairId = card.pairId;
+    el.dataset.type   = card.type;
+    el.style.animationDelay = `${idx * 0.04}s`;
+
+    el.innerHTML = `
+      <div class="mg-card-inner">
+        <div class="mg-card-back">
+          <div class="mg-card-back-icon">🃏</div>
+          <div class="mg-card-back-label">Flip</div>
+        </div>
+        <div class="mg-card-front card-${card.type}">
+          <div class="mg-card-type-badge">${card.type === 'term' ? '📝 Term' : '📖 Definition'}</div>
+          <div class="mg-card-content">${card.text}</div>
+        </div>
+      </div>
+    `;
+
+    el.addEventListener('click', () => mgFlipCard(idx, el));
+    board.appendChild(el);
+  });
+
+  // Start timer
+  mgTimerInterval = setInterval(() => {
+    mgSeconds++;
+    const m = Math.floor(mgSeconds / 60);
+    const s = mgSeconds % 60;
+    document.getElementById('mg-timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  }, 1000);
+}
+
+function mgShuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function mgFlipCard(idx, el) {
+  if (mgLocked) return;
+  if (el.classList.contains('flipped') || el.classList.contains('matched')) return;
+
+  el.classList.add('flipped');
+  mgFlippedCards.push({ idx, el, pairId: mgCards[idx].pairId, type: mgCards[idx].type });
+
+  if (mgFlippedCards.length === 2) {
+    mgMoves++;
+    document.getElementById('mg-moves').textContent = mgMoves;
+    mgCheckMatch();
+  }
+}
+
+function mgCheckMatch() {
+  mgLocked = true;
+  const [a, b] = mgFlippedCards;
+
+  // Must be same pair AND different types (term + def)
+  if (a.pairId === b.pairId && a.type !== b.type) {
+    // Match!
+    mgMatches++;
+    mgStreak++;
+    if (mgStreak > mgBestStreak) mgBestStreak = mgStreak;
+
+    const streakBonus = Math.min(mgStreak, 5);
+    const basePoints  = 100;
+    const earned      = basePoints * streakBonus;
+    mgScore += earned;
+
+    document.getElementById('mg-matches').textContent = `${mgMatches} / ${mgTotalPairs}`;
+    document.getElementById('mg-score').textContent   = mgScore.toLocaleString();
+    document.getElementById('mg-streak').textContent  = `${mgStreak} 🔥`;
+
+    setTimeout(() => {
+      a.el.classList.add('matched', 'match-flash');
+      b.el.classList.add('matched', 'match-flash');
+      spawnParticles(true);
+      showToast(`✅ Match! +${earned} pts` + (streakBonus > 1 ? ` (×${streakBonus})` : ''));
+      mgFlippedCards = [];
+      mgLocked = false;
+
+      // Check round complete
+      if (mgMatches >= mgTotalPairs) {
+        setTimeout(() => mgRoundComplete(), 600);
+      }
+    }, 400);
+
+  } else {
+    // No match
+    mgStreak = 0;
+    document.getElementById('mg-streak').textContent = '0 🔥';
+
+    setTimeout(() => {
+      a.el.classList.add('wrong-shake');
+      b.el.classList.add('wrong-shake');
+    }, 200);
+
+    setTimeout(() => {
+      a.el.classList.remove('flipped', 'wrong-shake');
+      b.el.classList.remove('flipped', 'wrong-shake');
+      mgFlippedCards = [];
+      mgLocked = false;
+    }, 1000);
+  }
+}
+
+function mgRoundComplete() {
+  clearInterval(mgTimerInterval);
+
+  const overlay = document.getElementById('mg-round-overlay');
+  const isLast  = mgRoundIndex >= MG_ROUNDS.length - 1;
+
+  document.getElementById('mg-overlay-icon').textContent  = isLast ? '🏆' : '🎯';
+  document.getElementById('mg-overlay-title').textContent = isLast ? 'Game Complete!' : 'Round Complete!';
+
+  const m = Math.floor(mgSeconds / 60);
+  const s = mgSeconds % 60;
+  document.getElementById('mg-overlay-stats').innerHTML = `
+    Moves: <span>${mgMoves}</span><br>
+    Time: <span>${m}:${s.toString().padStart(2, '0')}</span><br>
+    Best Streak: <span>${mgBestStreak} 🔥</span><br>
+    Round Score: <span>${mgScore.toLocaleString()}</span>
+  `;
+
+  const btn = document.getElementById('mg-overlay-btn');
+  if (isLast) {
+    btn.textContent = '🏠 View Results';
+    btn.onclick = () => {
+      overlay.classList.remove('show');
+      mgEndGame();
+    };
+  } else {
+    btn.textContent = 'Next Round →';
+    btn.onclick = () => {
+      overlay.classList.remove('show');
+      mgRoundIndex++;
+      mgLoadRound();
+    };
+  }
+
+  overlay.classList.add('show');
+}
+
+function mgEndGame() {
+  clearInterval(mgTimerInterval);
+  globalScore += mgScore;
+  document.getElementById('dash-score').textContent    = globalScore.toLocaleString();
+  document.getElementById('lb-your-score').textContent = globalScore.toLocaleString();
+
+  document.getElementById('r-score').textContent    = mgScore.toLocaleString();
+  document.getElementById('r-accuracy').textContent = `${mgMoves} moves`;
+  document.getElementById('r-streak').textContent   = `${mgBestStreak} 🔥`;
+  document.getElementById('r-time').textContent     = `${MG_ROUNDS.length} rounds`;
+  document.getElementById('r-play-again').onclick   = () => startMatchGame();
+  showPage('results');
+}
+
+// ══════════════════════════════════════
 // EVENT LISTENERS
 // ══════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
