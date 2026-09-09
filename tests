@@ -1,0 +1,3 @@
+//test
+int s = 3;
+printf(s);
