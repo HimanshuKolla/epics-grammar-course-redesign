@@ -6,6 +6,7 @@
   <title>Grammar Course Redesign</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="script.js"></script>
 </head>
 <body>
 
@@ -36,7 +37,7 @@
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-label">Total Score</div>
-        <div class="stat-value" id="dash-score">2,847</div>
+        <div class="stat-value" id="dash-score"></div>
         <div class="stat-icon">🏆</div>
       </div>
       <div class="stat-card">
@@ -46,15 +47,31 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Accuracy</div>
-        <div class="stat-value" id="dash-accuracy">87%</div>
+        <div class="stat-value" id="dash-accuracy"></div>
         <div class="stat-icon">🎯</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Avg. Time</div>
-        <div class="stat-value">45s</div>
+        <div class="stat-value" id="dash-time">45s</div>
         <div class="stat-icon">🕐</div>
       </div>
     </div>
+    <!--Update Stats-->
+    <script>
+        function updateDash() {
+            document.getElementById("dash-score").textContent =
+                Number(getScore()).toLocaleString();
+            document.getElementById("dash-accuracy").textContent =
+                Number(getAccuracy()).toLocaleString()+ "%";
+            document.getElementById("dash-time").textContent =
+                Number(getTime()).toLocaleString()+ "s";
+        }
+
+        updateDash(); // Initial load
+
+        // Refresh every second (if the score changes over time)
+        setInterval(updateDash, 1000);
+    </script>
 
     <!-- Mode selection -->
     <div class="mode-row">
@@ -87,7 +104,7 @@
           <div class="module-thumb">1</div>
           <div class="module-info">
             <div class="module-name-row">
-              <span class="module-name">Technical Writing</span>
+              <span class="module-name">Matching Game</span>
               <span class="difficulty-badge badge-easy">Easy</span>
             </div>
             <div class="module-progress-text">10/12 lessons completed</div>
@@ -100,7 +117,7 @@
           <div class="module-thumb">2</div>
           <div class="module-info">
             <div class="module-name-row">
-              <span class="module-name">Punctuation</span>
+              <span class="module-name">Conciseness</span>
               <span class="difficulty-badge badge-medium">Medium</span>
             </div>
             <div class="module-progress-text">9/15 lessons completed</div>
@@ -546,6 +563,5 @@
   <span id="toast-msg">Message</span>
 </div>
 
-<script src="script.js"></script>
 </body>
 </html>
