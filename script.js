@@ -1,7 +1,16 @@
+
+
 // ══════════════════════════════════════
 // GCR — Grammar Correction Realm
 // script.js
 // ══════════════════════════════════════
+// ══════════════════════════════════════
+// GCR — SENTENCE SURVIVAL
+// GCR — FOCUS MODE
+// GCR — MATCHING GAME
+// GLOBAL VARIABLES AND NAVIGATION
+// ══════════════════════════════════════
+
 
 // ══════════════════════════════════════
 // SENTENCE SURVIVAL — ROUND DATA
@@ -82,7 +91,11 @@ const SS_ROUNDS = [
 // ══════════════════════════════════════
 // GLOBAL STATE
 // ══════════════════════════════════════
-let globalScore = 2847;
+let globalScore = 0;
+let globalAccuracy = 100;
+let accuracyValues = [];
+let globalTime = 0;
+let timeValues = [];
 let gameMode    = 'practice';
 
 // Sentence Survival state
@@ -110,6 +123,42 @@ let fTimeLeft     = 55;
 let fTimerInterval = null;
 let fQuestionStart = 0;
 let fTotalTime    = 0;
+
+//=================================================
+//manage global variables
+//=================================================
+//score
+function getScore(){
+  return globalScore;
+}
+//accuracy
+function getAccuracy(){
+  return globalAccuracy;
+}
+function updateAccuracy(num){
+  accuracyValues.push(num);
+  if (accuracyValues.length > 20) {
+    accuracyValues.shift(); 
+  }
+  if (accuracyValues.length!=0){
+    const sum = accuracyValues.reduce((acc, curr) => acc + curr, 0);
+    globalAccuracy = sum / accuracyValues.length;
+  }
+}
+//time
+function getTime(){
+  return globalTime;
+}
+function updateTime(num){
+  timeValues.push(num);
+  if (timeValues.length > 20) {
+    timeValues.shift(); 
+  }
+  if (timeValues.length!=0){
+    const sum = timeValues.reduce((acc, curr) => acc + curr, 0);
+    globalTime = sum / timeValues.length;
+  }
+}
 
 const QUESTIONS = [
   {
@@ -471,6 +520,7 @@ function ssEndGame(won) {
 
   document.getElementById('r-score').textContent    = ssScore.toLocaleString();
   document.getElementById('r-accuracy').textContent = `${ssLives}/3 lives`;
+  updateAccuracy(ssLives/3);
   document.getElementById('r-streak').textContent   = won ? '🏆 Completed!' : '💀 Game Over';
   document.getElementById('r-time').textContent     = `${Math.min(ssRoundIndex + 1, MAX_ROUNDS)} / ${MAX_ROUNDS} rounds`;
 
@@ -579,8 +629,10 @@ function fEndGame() {
   globalScore += fScore;
   document.getElementById('r-score').textContent       = fScore.toLocaleString();
   document.getElementById('r-accuracy').textContent    = accuracy + '%';
+  updateAccuracy(accuracy);
   document.getElementById('r-streak').textContent      = fBestStreak;
   document.getElementById('r-time').textContent        = avgTime + 's';
+  updateTime(avgTime);
   document.getElementById('dash-score').textContent    = globalScore.toLocaleString();
   document.getElementById('lb-your-score').textContent = globalScore.toLocaleString();
   document.getElementById('r-play-again').onclick = () => startGame('focus');
@@ -699,17 +751,15 @@ function mgLoadRound() {
   mgFlippedCards = [];
   mgLocked       = false;
   mgMatches      = 0;
-  mgMoves        = 0;
-  mgSeconds      = 0;
 
   const round = MG_ROUNDS[mgRoundIndex];
   mgTotalPairs   = round.pairs.length;
 
   document.getElementById('mg-round-title').textContent = round.roundName;
   document.getElementById('mg-matches').textContent     = `0 / ${mgTotalPairs}`;
-  document.getElementById('mg-moves').textContent       = '0';
+  document.getElementById('mg-moves').textContent       = mgMoves.toLocaleString();;
   document.getElementById('mg-score').textContent       = mgScore.toLocaleString();
-  document.getElementById('mg-timer').textContent       = '0:00';
+  document.getElementById('mg-timer').textContent       = mgSeconds.toLocaleString();;
   document.getElementById('mg-streak').textContent      = '0 🔥';
 
   // Build card data: one card per term, one per definition
@@ -880,8 +930,10 @@ function mgEndGame() {
 
   document.getElementById('r-score').textContent    = mgScore.toLocaleString();
   document.getElementById('r-accuracy').textContent = `${mgMoves} moves`;
+  updateAccuracy(((8*3)/mgMoves)*100) //8 is the minimum amount of moves per round, 3 is the amount of rounds, and 100 changes decimal to percentage
+  updateTime(mgSeconds/3);            //3 is amount of rounds
   document.getElementById('r-streak').textContent   = `${mgBestStreak} 🔥`;
-  document.getElementById('r-time').textContent     = `${MG_ROUNDS.length} rounds`;
+  document.getElementById('r-time').textContent     = `${mgSeconds/3}s`;
   document.getElementById('r-play-again').onclick   = () => startMatchGame();
   showPage('results');
 }
